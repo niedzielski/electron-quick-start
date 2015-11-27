@@ -1,5 +1,13 @@
-var app = require('app');  // Module to control application life.
+var electron = require('electron');
+var app = electron.app;  // Module to control application life.
 var BrowserWindow = require('browser-window');  // Module to create native browser window.
+var globalShortcut = electron.globalShortcut;
+
+var KEYS = [
+  'A',
+  'MediaPlayPause',
+  'Ctrl+MediaPlayPause'
+];
 
 // Report crashes to our server.
 require('crash-reporter').start();
@@ -13,6 +21,7 @@ app.on('window-all-closed', function() {
   // On OS X it is common for applications and their menu bar
   // to stay active until the user quits explicitly with Cmd + Q
   if (process.platform != 'darwin') {
+    globalShortcut.unregisterAll();
     app.quit();
   }
 });
@@ -20,6 +29,7 @@ app.on('window-all-closed', function() {
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 app.on('ready', function() {
+  KEYS.forEach(register);
   // Create the browser window.
   mainWindow = new BrowserWindow({width: 800, height: 600});
 
@@ -37,3 +47,14 @@ app.on('ready', function() {
     mainWindow = null;
   });
 });
+
+function register(key) {
+  var callback = onKeyDown.bind(null, key);
+  if (!globalShortcut.register(key, callback)) {
+    process.stderr.write('failed to bind key=' + key + '\n');
+  }
+}
+
+function onKeyDown(key) {
+  process.stdout.write('key=' + key + '\n');
+}
